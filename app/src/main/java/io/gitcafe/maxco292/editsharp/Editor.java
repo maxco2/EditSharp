@@ -40,7 +40,6 @@ import org.antlr.v4.runtime.Lexer;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -349,7 +348,7 @@ public class Editor extends AppCompatActivity {
         typeoffile=mintent.getStringExtra("type");
 
         try {
-            fileOpen(uri,typeoffile);
+            fileOpen(typeoffile);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -381,7 +380,7 @@ public class Editor extends AppCompatActivity {
         return (int) (dpValue * scale + 0.5f);
     }
 
-    private void fileOpen(Uri uri,String typeoffile) throws IOException {
+    private void fileOpen(String typeoffile) throws IOException {
         File fi = new File(FilePath);
         FileInputStream testfileio = new FileInputStream(fi);
         byte b[]=new byte[testfileio.available()];

@@ -11,9 +11,6 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.EditText;
 
-/**
- * Created by maxco on 2016/1/24.
- */
 public class EditTextTest extends EditText {
 
 

@@ -140,7 +140,6 @@ public class MainActivity extends AppCompatActivity
                                     try {
                                         fiLF.createNewFile();
                                     } catch (IOException e) {
-                                        // TODO Auto-generated catch block
                                         e.printStackTrace();
                                     }
                                 }

@@ -10,10 +10,8 @@ import com.jcraft.jsch.Session;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Vector;
 
 /**
  * Created by maxco on 2016/3/24.
@@ -25,17 +23,16 @@ public class SSFTPsync {
             String LocalFilePath,
             String Remotefilename
     ) throws Exception{
-        Session session = null;
+        Session session;
         Channel channel = null;
 
 
         JSch jsch = new JSch();
 
 
-        if(port <=0){
-            //连接服务器，采用默认端口
-            session = jsch.getSession(user, ip);
-        }else{
+        //连接服务器，采用默认端口
+        if(port <=0) session = jsch.getSession(user, ip);
+        else{
             //采用指定的端口连接服务器
             session = jsch.getSession(user, ip ,port);
         }
@@ -54,7 +51,7 @@ public class SSFTPsync {
 
         try {
             //创建sftp通信通道
-            channel = (Channel) session.openChannel("sftp");
+            channel = session.openChannel("sftp");
             channel.connect(1000);
             ChannelSftp sftp = (ChannelSftp) channel;
 
@@ -86,6 +83,7 @@ public class SSFTPsync {
             e.printStackTrace();
         } finally {
             session.disconnect();
+            assert channel != null;
             channel.disconnect();
         }
     }
@@ -95,7 +93,7 @@ public class SSFTPsync {
             String LocalFilePath,
             String Remotefilename
     ) throws Exception{
-        Session session = null;
+        Session session;
         Channel channel = null;
 
 
@@ -124,7 +122,7 @@ public class SSFTPsync {
 
         try {
             //创建sftp通信通道
-            channel = (Channel) session.openChannel("sftp");
+            channel = session.openChannel("sftp");
             channel.connect(1000);
             ChannelSftp sftp = (ChannelSftp) channel;
 
@@ -159,6 +157,7 @@ public class SSFTPsync {
             e.printStackTrace();
         } finally {
             session.disconnect();
+            assert channel != null;
             channel.disconnect();
         }
     }
