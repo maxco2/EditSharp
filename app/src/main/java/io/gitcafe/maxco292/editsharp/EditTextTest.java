@@ -16,13 +16,6 @@ import android.widget.EditText;
  */
 public class EditTextTest extends EditText {
 
-    /*@Override
-    protected void onCreateContextMenu(ContextMenu menu) {
-        super.onCreateContextMenu(menu);
-        menu.add("hah");
-        menu.add("sdasdad");
-        menu.add("dsds");
-    }*/
 
     @Override
     protected void onCreateContextMenu(ContextMenu menu) {
@@ -41,7 +34,7 @@ public class EditTextTest extends EditText {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         if(getText().toString().length()!=0){
-            float y=0;
+            float y;
             Paint p=new Paint();
             p.setColor(Color.GRAY);
             p.setTextSize(30);

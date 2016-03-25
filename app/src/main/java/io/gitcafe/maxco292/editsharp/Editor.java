@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import static java.lang.Character.isSpaceChar;
@@ -64,11 +65,11 @@ public class Editor extends AppCompatActivity {
     public static int START;
     private static int MID_START;
     public static int END;
-    private List<String> identifiers=new ArrayList<String>();
-    private List<String> testArray = new ArrayList<String>();
+    private List<String> identifiers=new ArrayList<>();
+    private List<String> testArray = new ArrayList<>();
     private MyAdapter adapter;
     private String typeoffile;
-    private HashMap<String,Integer> typeID_HM=new HashMap<String,Integer>();
+    private HashMap<String,Integer> typeID_HM=new HashMap<>();
     private String FilePath;
     private int toolbarheight;
     private int statusbarheight;
@@ -109,15 +110,13 @@ public class Editor extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 File fi = new File(FilePath);
-                FileOutputStream testfileio=null;
+                FileOutputStream testfileio;
                 try {
                     testfileio = new FileOutputStream(fi);
                     byte b[]=mtt.getText().toString().getBytes();
                     testfileio.write(b,0,b.length);
                     testfileio.close();
                     Toast.makeText(Editor.this,"保存成功",Toast.LENGTH_SHORT).show();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -134,15 +133,13 @@ public class Editor extends AppCompatActivity {
                     @Override
                     public void run() {
                         File fi = new File(FilePath);
-                        FileOutputStream testfileio=null;
+                        FileOutputStream testfileio;
                         try {
                             testfileio = new FileOutputStream(fi);
                             byte b[]=mtt.getText().toString().getBytes();
                             testfileio.write(b, 0, b.length);
                             testfileio.close();
                             //Toast.makeText(Editor.this,"保存成功",Toast.LENGTH_SHORT).show();
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -170,7 +167,7 @@ public class Editor extends AppCompatActivity {
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
                 Log.d("---***---", "beforeTextChanged 被执行----> s=" + s+"----start="+ start
                         + "----after="+after + "----count" +count);
-                if(DBINSERT==true)//run only once
+                if(DBINSERT)//run only once
                 {
                     new Thread(new Runnable() {
                         @Override
@@ -223,7 +220,7 @@ public class Editor extends AppCompatActivity {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 Log.d("---***---", "onTextChanged 被执行--------start=" + start
                         + "\n----before=" + before + "\n----count" + count);
-                if(DELETE_MODIFY==false || AUTOCOMPLETE_MODIFY==true) {
+                if(!DELETE_MODIFY || AUTOCOMPLETE_MODIFY) {
                     if (count == 1) {
                         SUCCESS_MODEIFY = true;
                         START = start;
@@ -312,7 +309,7 @@ public class Editor extends AppCompatActivity {
                 Log.d("---***---", "afterTextChanged 被执行----");
 //listview测试
                 mtt.removeTextChangedListener(this);
-                if(INSERT_MODIFY==true) {
+                if(INSERT_MODIFY) {
                     try {
                         int pos = mtt.getSelectionStart();
                         Layout layout = mtt.getLayout();
@@ -322,7 +319,7 @@ public class Editor extends AppCompatActivity {
                         float x = layout.getPrimaryHorizontal(pos);
                         float y = baseline + ascent;
 
-                        testArray = new ArrayList<String>();
+                        testArray = new ArrayList<>();
                         testArray = DatabaseAdapter.getIntance(Editor.this)
                                 .queryInfo(
                                         mCharS.toString());
@@ -330,7 +327,7 @@ public class Editor extends AppCompatActivity {
                         mLv.setAdapter(adapter);
                         mLv.setBackgroundColor(Color.WHITE);
                         mLv.setX(x);
-                        mLv.setY((float) (y + toolbarheight + statusbarheight+ (baseline / line)*1.25));
+                        mLv.setY((float) (y + toolbarheight + statusbarheight+ (baseline / line)*1.25));//A little tricky here!
                         mLv.setVisibility(View.VISIBLE);
                     }catch (Exception e)
                     {
@@ -338,12 +335,12 @@ public class Editor extends AppCompatActivity {
                     }
                 }
 //
-                if(SUCCESS_MODEIFY==true && START!=END) {
+                if(SUCCESS_MODEIFY && START!=END) {
                     try {
                         Color_DFA(s, START, END);
                     }catch (Exception e)
                     {
-
+                        e.printStackTrace();
                     }
                 }
                 mtt.addTextChangedListener(this);
@@ -403,7 +400,7 @@ public class Editor extends AppCompatActivity {
         int type=cst.getType();
         Pattern allletter=Pattern.compile("[A-Za-z]*");
         int ID_NUM=typeID_HM.get(typeoffile);
-        while(gt!="<EOF>") {
+        while(!Objects.equals(gt, "<EOF>")) {
             if(type==ID_NUM) {
                 lll.setSpan(new ForegroundColorSpan(Color.RED), cst.getStartIndex(), cst.getStopIndex() + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 identifiers.add(gt);
@@ -433,7 +430,7 @@ public class Editor extends AppCompatActivity {
         int type=cst.getType();
         Pattern allletter=Pattern.compile("[A-Za-z]*");
         int ID_NUM=typeID_HM.get(typeoffile);
-        while(gt!="<EOF>") {
+        while(!Objects.equals(gt, "<EOF>")) {
             if(type==ID_NUM) {
                 lll.setSpan(new ForegroundColorSpan(Color.RED), cst.getStartIndex(), cst.getStopIndex() + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 identifiers.add(gt);

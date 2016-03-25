@@ -23,6 +23,7 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import io.gitcafe.maxco292.editsharp.db.DatabaseAdapter;
@@ -93,10 +94,8 @@ public class MainActivity extends AppCompatActivity
     private MaterialDialog materialDialog;
     private String mPreValue[]={"0","1","2","3","4"};
     private List<String> getListArray(String[] array) {
-        List<String> titleArray = new ArrayList<String>();
-        for (String title : array) {
-            titleArray.add(title);
-        }
+        List<String> titleArray = new ArrayList<>();
+        Collections.addAll(titleArray, array);
         return titleArray;
     }
     private void setmPreValue(String[] str)
