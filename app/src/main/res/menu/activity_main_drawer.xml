@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <!--<item-->
+            <!--android:id="@+id/nav_camera"-->
+            <!--android:icon="@drawable/ic_menu_camera"-->
+            <!--android:title="Import" />-->
+        <!--<item-->
+            <!--android:id="@+id/nav_gallery"-->
+            <!--android:icon="@drawable/ic_menu_gallery"-->
+            <!--android:title="Gallery" />-->
+
+        <!--android:icon="@drawable/ic_action_git"-->
+        <item
+            android:id="@+id/nav_git"
+            android:icon="@drawable/ic_sync_black_24dp"
+            android:title="Sync" />
+        <item
+            android:id="@+id/nav_external_storage"
+            android:icon="@drawable/ic_action_file"
+            android:title="打开外置存储文件" />
+    </group>
+
+    <item android:title="Contacts Me">
+        <menu>
+            <!--<item-->
+                <!--android:id="@+id/nav_share"-->
+                <!--android:icon="@drawable/ic_menu_share"-->
+                <!--android:title="Share" />-->
+            <item
+                android:id="@+id/nav_contactsme"
+                android:icon="@drawable/ic_menu_send"
+                android:title="Send" />
+        </menu>
+    </item>
+
+</menu>
