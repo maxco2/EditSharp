@@ -4,12 +4,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * 数据库管理类
- * 
- * @author zihao
- * 
- */
+
 public class DatabaseManager {
 	private AtomicInteger mAtomicInteger = new AtomicInteger();// 供原子操作的Integer的类,默认值为0
 	private static DatabaseManager mDbManager;// 数据库管理器实例
@@ -29,13 +24,7 @@ public class DatabaseManager {
 		}
 	}
 
-	/**
-	 * 获取数据库管理实例
-	 * 
-	 * @param helper
-	 *            // 数据库帮助类对象
-	 * @return
-	 */
+
 	public static synchronized DatabaseManager getInstance(DatabaseHelper helper) {
 		if (mDbManager == null) {
 			initializeInstance(helper);
@@ -43,11 +32,6 @@ public class DatabaseManager {
 		return mDbManager;
 	}
 
-	/**
-	 * 获取一个可写的数据库操作实例
-	 * 
-	 * @return
-	 */
 	public synchronized SQLiteDatabase getWritableDatabase() {
 		if (mAtomicInteger.incrementAndGet() == 1) {// 自增值为1的时候，允许执行
 			// Opening new database
@@ -56,11 +40,6 @@ public class DatabaseManager {
 		return mDatabase;
 	}
 
-	/**
-	 * 获取一个可读的数据库操作实例
-	 * 
-	 * @return
-	 */
 	public synchronized SQLiteDatabase getReadableDatabase() {
 		if (mAtomicInteger.incrementAndGet() == 1) {// 自增值为1的时候，允许执行
 			// Opening new database

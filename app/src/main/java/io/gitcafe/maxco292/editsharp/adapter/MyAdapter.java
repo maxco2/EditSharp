@@ -13,23 +13,14 @@ import java.util.List;
 
 import io.gitcafe.maxco292.editsharp.R;
 
-/**
- * ListView适配器
- * 
- * @author zihao
- * 
- */
+
 public class MyAdapter extends BaseAdapter {
 
 	private List<String> mTitleArray;// 标题列表
 	private LayoutInflater inflater = null;
 	private Context mContext;
 
-	/**
-	 * Adapter构造方法
-	 * 
-	 * @param titleArray
-	 */
+
 	public MyAdapter(Context context, List<String> titleArray) {
 		// TODO Auto-generated constructor stub
 		this.mTitleArray = titleArray;
@@ -38,9 +29,7 @@ public class MyAdapter extends BaseAdapter {
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 	}
 
-	/**
-	 * 获取总数
-	 */
+
 	@Override
 	public int getCount() {
 		// TODO Auto-generated method stub
@@ -90,11 +79,7 @@ public class MyAdapter extends BaseAdapter {
 		TextView titleTv;
 	}
 
-	/**
-	 * 刷新数据
-	 * 
-	 * @param array
-	 */
+
 	public void refreshData(List<String> array) {
 		this.mTitleArray = array;
 		notifyDataSetChanged();

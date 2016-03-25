@@ -10,23 +10,13 @@ import android.database.sqlite.SQLiteDatabase;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 数据库操作类
- * 
- * @author zihao
- * 
- */
+
 public class DatabaseAdapter {
 
 	private static DatabaseManager manager;
 	private static Context mContext;
 
-	/**
-	 * 获取一个操作类对象
-	 * 
-	 * @param context
-	 * @return
-	 */
+
 	public static DatabaseAdapter getIntance(Context context) {
 		DatabaseAdapter adapter = new DatabaseAdapter();
 		mContext = context;
@@ -34,11 +24,7 @@ public class DatabaseAdapter {
 		return adapter;
 	}
 
-	/**
-	 * 插入信息
-	 * 
-	 * @param titleArray
-	 */
+
 	public void inserInfo(List<String> titleArray) {
 		SQLiteDatabase database = manager.getWritableDatabase();
 
@@ -70,17 +56,11 @@ public class DatabaseAdapter {
             manager.closeDatabase();
         }
     }
-	/**
-	 * 查询信息
-	 * 
-	 * @param pinyin
-	 *            // 字符串转换的拼音
-	 * @return
-	 */
+
 	public List<String> queryInfo(String pinyin) {
-		List<String> resultArray = new ArrayList<String>();
+		List<String> resultArray = new ArrayList<>();
 		SQLiteDatabase database = manager.getReadableDatabase();
-		Cursor cursor = null;
+		Cursor cursor;
 
 		try {
 			// 创建模糊查询的条件

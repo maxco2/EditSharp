@@ -2,17 +2,11 @@ package io.gitcafe.maxco292.editsharp.db;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import java.io.File;
 
-/**
- * 数据库助手类
- * 
- * @author zihao
- * 
- */
+
 public class DatabaseHelper extends SQLiteOpenHelper {
 
 	public static final int VERSION = 1;// 版本号
@@ -21,19 +15,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			+ "maxc.db";
 	public static final String TABLE_NAME = "auto";// 表名
 
-	/**
-	 * DatabaseHelper构造方法
-	 * 
-	 * @param context
-	 * @param name
-	 * @param factory
-	 * @param version
-	 */
-	public DatabaseHelper(Context context, String name, CursorFactory factory,
-			int version) {
-		super(context, name, factory, version);
-		// TODO Auto-generated constructor stub
-	}
 
 	public DatabaseHelper(Context context) {
 		// TODO Auto-generated constructor stub
@@ -52,11 +33,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 	}
 
-	/**
-	 * 创建数据库表
-	 * 
-	 * @param db
-	 */
 	private void createAutoTable(SQLiteDatabase db) {
 		db.execSQL("create table  if not exists "
 				+ TABLE_NAME
