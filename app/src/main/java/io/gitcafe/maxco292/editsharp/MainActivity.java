@@ -244,7 +244,6 @@ public class MainActivity extends AppCompatActivity
                     String file=msg.obj.toString();
                     SelectLANG(Uri.parse(file));
                     materialDialog.dismiss();
-                    Log.d("uritest",file);
                     break;
                 case MSG_DOWN_FILE_FAIL:
                     materialDialog.dismiss();
@@ -279,68 +278,6 @@ public class MainActivity extends AppCompatActivity
         Uri uri=getIntent().getData();
         setmPreValue(mPreValue);
 
-//        final EditText editText = new EditText(this);
-//        editText.setText("请输入要同步文件名，服务器设置请到settings设置");
-//        materialDialog=new MaterialDialog(this)
-//                .setView(editText)
-//                .setPositiveButton("OK", new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View v) {
-//                        new Thread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                String RemoteFileName=editText.getText().toString();
-//                                File fi=new File(Environment
-//                                        .getExternalStorageDirectory().getPath()
-//                                        +mPreValue[4]);
-//                                if  (!fi .exists()  && !fi .isDirectory())
-//                                {
-//                                    System.out.println("//不存在");
-//                                    fi .mkdir();
-//                                }
-//                                File fiLF=new File(fi.getPath()+File.separator+ RemoteFileName);
-//                                Log.d("fileLOCALPATH",fiLF.toString());
-//                                if(!fiLF.exists())
-//                                {
-//                                    try {
-//                                        fiLF.createNewFile();
-//                                    } catch (IOException e) {
-//                                        e.printStackTrace();
-//                                    }
-//                                }
-//                                try {
-//                                    SSFTPsync.sshSftpDOWN(
-//                                            mPreValue[0],
-//                                            mPreValue[2],
-//                                            mPreValue[3],
-//                                            -1,
-//                                            mPreValue[1],
-//                                            fiLF.toString(),
-//                                            RemoteFileName
-//                                            );
-//                                } catch (Exception e) {
-//                                    e.printStackTrace();
-//                                }
-//                            }
-//                        }).start();
-//
-//                        Toast.makeText(MainActivity.this,editText.getText().toString()+"已同步到本地"+mPreValue[4]+"文件夹" ,Toast.LENGTH_SHORT).show();
-//                        materialDialog.dismiss();
-//                    }
-//                })
-//                .setNegativeButton("CANCL", new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View v) {
-//                        materialDialog.dismiss();
-//                    }
-//                });
-
-        listView = new ListView(this);
-
-        //materialDialog=new MaterialDialog(this);
-
-        // 向数据库中插入指定数据
-
         if(uri!=null)
         {
             SelectLANG(uri);
@@ -348,17 +285,12 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.setType("*/*");
-//                intent.setType(ContactsContract.Contacts.CONTENT_ITEM_TYPE);
-//                intent.addCategory(Intent.CATEGORY_OPENABLE);
                 try {
                     startActivityForResult(Intent.createChooser(intent, "请选择文件"), FILE_SELECT_CODE);
                 } catch (android.content.ActivityNotFoundException ex) {
@@ -383,7 +315,6 @@ public class MainActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
-
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
     }
@@ -464,6 +395,7 @@ public class MainActivity extends AppCompatActivity
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
+
     private void SelectLANG(Uri uri)
     {
         DatabaseAdapter.getIntance(this).deleteAll();
