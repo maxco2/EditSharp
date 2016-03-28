@@ -16,7 +16,7 @@ import java.util.Vector;
 
 
 public class SSFTPsync {
-    public static void connsshSftp(
+    public static String[] connsshSftp(
             String ip, String user, String psw ,int port,
             String remoteDirectory
     ) throws Exception{
@@ -45,7 +45,7 @@ public class SSFTPsync {
         session.setConfig("StrictHostKeyChecking", "no");
         //设置登陆超时时间
         session.connect(30000);
-
+        String[] filenames = new String[0];
         try {
             //创建sftp通信通道
             channel = session.openChannel("sftp");
@@ -58,6 +58,11 @@ public class SSFTPsync {
 
             //列出服务器指定的文件列表
             Vector v = sftp.ls("*.*");
+            filenames=new String[v.size()];
+            for(int i=0;i<v.size();++i)
+            {
+              filenames[i]=  ((ChannelSftp.LsEntry)(v.get(i))).getFilename();
+            }
         }catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -65,6 +70,7 @@ public class SSFTPsync {
             assert channel != null;
             channel.disconnect();
         }
+        return filenames;
     }
     public static void sshSftp(
             String ip, String user, String psw ,int port,

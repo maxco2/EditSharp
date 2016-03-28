@@ -1,10 +1,13 @@
 package io.gitcafe.maxco292.editsharp;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
@@ -17,7 +20,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -89,9 +96,13 @@ public class MainActivity extends AppCompatActivity
             "void", "volatile", "wchar_t", "while"
     };
     private int FILE_SELECT_CODE=0;
+    private static final int MSG_SUCCESS=1;
+    private static final int MSG_FAILURE=0;
+    private static final int MSG_OPENFILE=2;
     private FloatingActionButton fab;
     private FloatingActionButton fab_git;
     private MaterialDialog materialDialog;
+    private ListView listView;
     private String mPreValue[]={"0","1","2","3","4"};
     private List<String> getListArray(String[] array) {
         List<String> titleArray = new ArrayList<>();
@@ -107,24 +118,21 @@ public class MainActivity extends AppCompatActivity
         str[3]=prefs.getString("remote_passwords_text","");
         str[4]=prefs.getString("local_directory_text","");
     }
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
 
-        Uri uri=getIntent().getData();
-        setmPreValue(mPreValue);
-
-        final EditText editText = new EditText(this);
-        editText.setText("请输入要同步文件名，服务器设置请到settings设置");
-        materialDialog=new MaterialDialog(this)
-                .setView(editText)
-                .setPositiveButton("OK", new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        new Thread(new Runnable() {
+    @SuppressLint("HandlerLeak")
+    private Handler mHandler=new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_SUCCESS:
+                    listView.setAdapter((ArrayAdapter<String>) msg.obj);
+                    listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                            final String file=parent.getItemAtPosition(position).toString();
+                            new Thread(new Runnable() {
                             @Override
                             public void run() {
-                                String RemoteFileName=editText.getText().toString();
                                 File fi=new File(Environment
                                         .getExternalStorageDirectory().getPath()
                                         +mPreValue[4]);
@@ -133,7 +141,7 @@ public class MainActivity extends AppCompatActivity
                                     System.out.println("//不存在");
                                     fi .mkdir();
                                 }
-                                File fiLF=new File(fi.getPath()+File.separator+ RemoteFileName);
+                                File fiLF=new File(fi.getPath()+File.separator+ file);
                                 Log.d("fileLOCALPATH",fiLF.toString());
                                 if(!fiLF.exists())
                                 {
@@ -151,24 +159,109 @@ public class MainActivity extends AppCompatActivity
                                             -1,
                                             mPreValue[1],
                                             fiLF.toString(),
-                                            RemoteFileName
+                                            file
                                             );
+                                    mHandler.obtainMessage(MSG_OPENFILE,fiLF.toString()).sendToTarget();
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
                             }
                         }).start();
+                        }
+                    });
+                    materialDialog.setTitle("文件列表获取成功").setContentView(listView);
+                    Toast.makeText(getApplication(), "成功获取文件列表", Toast.LENGTH_SHORT).show();
+                    break;
 
-                        Toast.makeText(MainActivity.this,editText.getText().toString()+"已同步到本地"+mPreValue[4]+"文件夹" ,Toast.LENGTH_SHORT).show();
-                        materialDialog.dismiss();
-                    }
-                })
-                .setNegativeButton("CANCL", new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        materialDialog.dismiss();
-                    }
-                });
+                case MSG_FAILURE:
+                    Toast.makeText(getApplication(), "获取文件列表失败", Toast.LENGTH_SHORT).show();
+                    break;
+                case MSG_OPENFILE:
+                    String file=msg.obj.toString();
+                    SelectLANG(Uri.parse(file));
+                    materialDialog.dismiss();
+                    Log.d("uritest",file);
+                    break;
+            }
+            super.handleMessage(msg);
+        }
+    };
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Uri uri=getIntent().getData();
+        setmPreValue(mPreValue);
+
+//        final EditText editText = new EditText(this);
+//        editText.setText("请输入要同步文件名，服务器设置请到settings设置");
+//        materialDialog=new MaterialDialog(this)
+//                .setView(editText)
+//                .setPositiveButton("OK", new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View v) {
+//                        new Thread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                String RemoteFileName=editText.getText().toString();
+//                                File fi=new File(Environment
+//                                        .getExternalStorageDirectory().getPath()
+//                                        +mPreValue[4]);
+//                                if  (!fi .exists()  && !fi .isDirectory())
+//                                {
+//                                    System.out.println("//不存在");
+//                                    fi .mkdir();
+//                                }
+//                                File fiLF=new File(fi.getPath()+File.separator+ RemoteFileName);
+//                                Log.d("fileLOCALPATH",fiLF.toString());
+//                                if(!fiLF.exists())
+//                                {
+//                                    try {
+//                                        fiLF.createNewFile();
+//                                    } catch (IOException e) {
+//                                        e.printStackTrace();
+//                                    }
+//                                }
+//                                try {
+//                                    SSFTPsync.sshSftpDOWN(
+//                                            mPreValue[0],
+//                                            mPreValue[2],
+//                                            mPreValue[3],
+//                                            -1,
+//                                            mPreValue[1],
+//                                            fiLF.toString(),
+//                                            RemoteFileName
+//                                            );
+//                                } catch (Exception e) {
+//                                    e.printStackTrace();
+//                                }
+//                            }
+//                        }).start();
+//
+//                        Toast.makeText(MainActivity.this,editText.getText().toString()+"已同步到本地"+mPreValue[4]+"文件夹" ,Toast.LENGTH_SHORT).show();
+//                        materialDialog.dismiss();
+//                    }
+//                })
+//                .setNegativeButton("CANCL", new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View v) {
+//                        materialDialog.dismiss();
+//                    }
+//                });
+        listView = new ListView(this);
+        listView.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+        float scale = getResources().getDisplayMetrics().density;
+        int dpAsPixels = (int) (8 * scale + 0.5f);
+        listView.setPadding(0, dpAsPixels, 0, dpAsPixels);
+        listView.setDividerHeight(0);
+        materialDialog=new MaterialDialog(this);
+        materialDialog.setPositiveButton("OK", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                materialDialog.dismiss();
+            }
+        });
 
         // 向数据库中插入指定数据
 
@@ -201,6 +294,31 @@ public class MainActivity extends AppCompatActivity
         fab_git.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+               new Thread(new Runnable() {
+                   @Override
+                   public void run() {
+                       String[] filenames = new String[0];
+                       final ArrayAdapter<String> arrayAdapter
+                               = new ArrayAdapter<>(MainActivity.this,
+                               android.R.layout.simple_list_item_1);
+                       try {
+                           filenames= SSFTPsync.connsshSftp(mPreValue[0],
+                                   mPreValue[2],
+                                   mPreValue[3],
+                                   -1,
+                                   mPreValue[1]);
+                       } catch (Exception e) {
+                           e.printStackTrace();
+                       }
+                       for(String s:filenames)
+                       {
+                            arrayAdapter.add(s);
+                       }
+                       mHandler.obtainMessage(MSG_SUCCESS,arrayAdapter).sendToTarget();
+                   }
+               }).start();
+                materialDialog.setTitle("文件列表获取中");
+                materialDialog.setContentView(new ListView(MainActivity.this));
                 materialDialog.show();
             }
         });
