@@ -20,6 +20,8 @@ public class EditTextTest extends EditText {
         menu.add("上传文件到服务器");
     }
 
+    
+
     public EditTextTest(Context cn,AttributeSet as)
     {
         super(cn,as);

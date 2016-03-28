@@ -11,6 +11,7 @@ import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -99,11 +100,13 @@ public class MainActivity extends AppCompatActivity
     private static final int MSG_SUCCESS=1;
     private static final int MSG_FAILURE=0;
     private static final int MSG_OPENFILE=2;
+    private static final int MSG_DOWN_FILE_FAIL=3;
     private FloatingActionButton fab;
     private FloatingActionButton fab_git;
     private MaterialDialog materialDialog;
     private ListView listView;
     private String mPreValue[]={"0","1","2","3","4"};
+    private String mDownFileName;
     private List<String> getListArray(String[] array) {
         List<String> titleArray = new ArrayList<>();
         Collections.addAll(titleArray, array);
@@ -118,69 +121,153 @@ public class MainActivity extends AppCompatActivity
         str[3]=prefs.getString("remote_passwords_text","");
         str[4]=prefs.getString("local_directory_text","");
     }
-
+    Runnable mRunableGetFileList=new Runnable() {
+        @Override
+        public void run() {
+            String[] filenames;
+            final ArrayAdapter<String> arrayAdapter
+                    = new ArrayAdapter<>(MainActivity.this,
+                    android.R.layout.simple_list_item_1);
+            try {
+                filenames= SSFTPsync.connsshSftp(mPreValue[0],
+                        mPreValue[2],
+                        mPreValue[3],
+                        -1,
+                        mPreValue[1]);
+                for(String s:filenames)
+                {
+                    arrayAdapter.add(s);
+                }
+                mHandler.obtainMessage(MSG_SUCCESS,arrayAdapter).sendToTarget();
+            } catch (Exception e) {
+                mHandler.obtainMessage(MSG_FAILURE).sendToTarget();
+                e.printStackTrace();
+            }
+        }
+    };
+    Runnable mRunableDownLoadFile=new Runnable() {
+        @Override
+        public void run() {
+            File fi=new File(Environment
+                    .getExternalStorageDirectory().getPath()
+                    +mPreValue[4]);
+            if  (!fi .exists()  && !fi .isDirectory())
+            {
+                System.out.println("//不存在");
+                fi .mkdir();
+            }
+            File fiLF=new File(fi.getPath()+File.separator+ mDownFileName);
+            Log.d("fileLOCALPATH",fiLF.toString());
+            if(!fiLF.exists())
+            {
+                try {
+                    fiLF.createNewFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            try {
+                SSFTPsync.sshSftpDOWN(
+                        mPreValue[0],
+                        mPreValue[2],
+                        mPreValue[3],
+                        -1,
+                        mPreValue[1],
+                        fiLF.toString(),
+                        mDownFileName
+                );
+                mHandler.obtainMessage(MSG_OPENFILE,fiLF.toString()).sendToTarget();
+            } catch (Exception e) {
+                e.printStackTrace();
+                mHandler.obtainMessage(MSG_DOWN_FILE_FAIL,fiLF.toString()).sendToTarget();
+            }
+        }
+    };
     @SuppressLint("HandlerLeak")
     private Handler mHandler=new Handler(){
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case MSG_SUCCESS:
+                    materialDialog.dismiss();
+                    materialDialog=new MaterialDialog(MainActivity.this).setPositiveButton("OK", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            materialDialog.dismiss();
+                        }
+                    });
+                    listView=new ListView(MainActivity.this);
+                    listView.setLayoutParams(new ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT));
+                    float scale = getResources().getDisplayMetrics().density;
+                    int dpAsPixels = (int) (8 * scale + 0.5f);
+                    listView.setPadding(0, dpAsPixels, 0, dpAsPixels);
+                    listView.setDividerHeight(0);
                     listView.setAdapter((ArrayAdapter<String>) msg.obj);
                     listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                         @Override
                         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                            final String file=parent.getItemAtPosition(position).toString();
-                            new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                File fi=new File(Environment
-                                        .getExternalStorageDirectory().getPath()
-                                        +mPreValue[4]);
-                                if  (!fi .exists()  && !fi .isDirectory())
-                                {
-                                    System.out.println("//不存在");
-                                    fi .mkdir();
-                                }
-                                File fiLF=new File(fi.getPath()+File.separator+ file);
-                                Log.d("fileLOCALPATH",fiLF.toString());
-                                if(!fiLF.exists())
-                                {
-                                    try {
-                                        fiLF.createNewFile();
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                                try {
-                                    SSFTPsync.sshSftpDOWN(
-                                            mPreValue[0],
-                                            mPreValue[2],
-                                            mPreValue[3],
-                                            -1,
-                                            mPreValue[1],
-                                            fiLF.toString(),
-                                            file
-                                            );
-                                    mHandler.obtainMessage(MSG_OPENFILE,fiLF.toString()).sendToTarget();
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }).start();
+                            mDownFileName = parent.getItemAtPosition(position).toString();
+                            new Thread(mRunableDownLoadFile).start();
                         }
                     });
                     materialDialog.setTitle("文件列表获取成功").setContentView(listView);
+                    materialDialog.show();
                     Toast.makeText(getApplication(), "成功获取文件列表", Toast.LENGTH_SHORT).show();
                     break;
 
                 case MSG_FAILURE:
-                    Toast.makeText(getApplication(), "获取文件列表失败", Toast.LENGTH_SHORT).show();
+                    materialDialog.dismiss();
+                    Toast.makeText(getApplication(), "获取文件列表失败，请重试", Toast.LENGTH_SHORT).show();
+                    materialDialog=new MaterialDialog(MainActivity.this).setPositiveButton("OK", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            materialDialog.dismiss();
+                        }
+                    });
+                    materialDialog.setTitle("获取文件列表失败，请重试");
+                    materialDialog.setNegativeButton("重试", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            materialDialog.dismiss();
+                            materialDialog=new MaterialDialog(MainActivity.this);
+                            materialDialog.setTitle("文件列表获取中");
+                            materialDialog.setContentView(new ListView(MainActivity.this));
+                            materialDialog.show();
+                            new Thread(mRunableGetFileList).start();
+                        }
+                    });
+                    materialDialog.show();
                     break;
                 case MSG_OPENFILE:
                     String file=msg.obj.toString();
                     SelectLANG(Uri.parse(file));
                     materialDialog.dismiss();
                     Log.d("uritest",file);
+                    break;
+                case MSG_DOWN_FILE_FAIL:
+                    materialDialog.dismiss();
+                    Toast.makeText(getApplication(), "尝试下载文件失败，请重试", Toast.LENGTH_SHORT).show();
+                    materialDialog=new MaterialDialog(MainActivity.this).setPositiveButton("OK", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            materialDialog.dismiss();
+                        }
+                    });
+                    materialDialog.setTitle("尝试下载文件失败，请重试");
+                    materialDialog.setNegativeButton("重试", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            materialDialog.dismiss();
+                            materialDialog = new MaterialDialog(MainActivity.this);
+                            materialDialog.setTitle("文件列表获取中");
+                            materialDialog.setContentView(new ListView(MainActivity.this));
+                            materialDialog.show();
+                            new Thread(mRunableDownLoadFile).start();
+                        }
+                    });
+                    materialDialog.show();
                     break;
             }
             super.handleMessage(msg);
@@ -247,21 +334,10 @@ public class MainActivity extends AppCompatActivity
 //                        materialDialog.dismiss();
 //                    }
 //                });
+
         listView = new ListView(this);
-        listView.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT));
-        float scale = getResources().getDisplayMetrics().density;
-        int dpAsPixels = (int) (8 * scale + 0.5f);
-        listView.setPadding(0, dpAsPixels, 0, dpAsPixels);
-        listView.setDividerHeight(0);
-        materialDialog=new MaterialDialog(this);
-        materialDialog.setPositiveButton("OK", new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                materialDialog.dismiss();
-            }
-        });
+
+        //materialDialog=new MaterialDialog(this);
 
         // 向数据库中插入指定数据
 
@@ -294,32 +370,11 @@ public class MainActivity extends AppCompatActivity
         fab_git.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               new Thread(new Runnable() {
-                   @Override
-                   public void run() {
-                       String[] filenames = new String[0];
-                       final ArrayAdapter<String> arrayAdapter
-                               = new ArrayAdapter<>(MainActivity.this,
-                               android.R.layout.simple_list_item_1);
-                       try {
-                           filenames= SSFTPsync.connsshSftp(mPreValue[0],
-                                   mPreValue[2],
-                                   mPreValue[3],
-                                   -1,
-                                   mPreValue[1]);
-                       } catch (Exception e) {
-                           e.printStackTrace();
-                       }
-                       for(String s:filenames)
-                       {
-                            arrayAdapter.add(s);
-                       }
-                       mHandler.obtainMessage(MSG_SUCCESS,arrayAdapter).sendToTarget();
-                   }
-               }).start();
+                materialDialog=new MaterialDialog(MainActivity.this);
                 materialDialog.setTitle("文件列表获取中");
                 materialDialog.setContentView(new ListView(MainActivity.this));
                 materialDialog.show();
+                new Thread(mRunableGetFileList).start();
             }
         });
         fab_git.hide();
