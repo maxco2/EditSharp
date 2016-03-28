@@ -12,11 +12,60 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Vector;
 
-/**
- * Created by maxco on 2016/3/24.
- */
+
 public class SSFTPsync {
+    public static void connsshSftp(
+            String ip, String user, String psw ,int port,
+            String remoteDirectory
+    ) throws Exception{
+        Session session;
+        Channel channel = null;
+
+
+        JSch jsch = new JSch();
+
+
+        //连接服务器，采用默认端口
+        if(port <=0) session = jsch.getSession(user, ip);
+        else{
+            //采用指定的端口连接服务器
+            session = jsch.getSession(user, ip ,port);
+        }
+
+        //如果服务器连接不上，则抛出异常
+        if (session == null) {
+            throw new Exception("session is null");
+        }
+
+        //设置登陆主机的密码
+        session.setPassword(psw);//设置密码
+        //设置第一次登陆的时候提示，可选值：(ask | yes | no)
+        session.setConfig("StrictHostKeyChecking", "no");
+        //设置登陆超时时间
+        session.connect(30000);
+
+        try {
+            //创建sftp通信通道
+            channel = session.openChannel("sftp");
+            channel.connect(1000);
+            ChannelSftp sftp = (ChannelSftp) channel;
+
+
+            //进入服务器指定的文件夹
+            sftp.cd(remoteDirectory);
+
+            //列出服务器指定的文件列表
+            Vector v = sftp.ls("*.*");
+        }catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            session.disconnect();
+            assert channel != null;
+            channel.disconnect();
+        }
+    }
     public static void sshSftp(
             String ip, String user, String psw ,int port,
             String remoteDirectory,
@@ -60,9 +109,10 @@ public class SSFTPsync {
             sftp.cd(remoteDirectory);
 
             //列出服务器指定的文件列表
-//            Vector v = sftp.ls("*.txt");
+//           Vector v = sftp.ls("*.*");
 //            for(int i=0;i<v.size();i++){
-//                System.out.println(v.get(i));
+//
+//                Log.d("fffffffffffffffffffff",((ChannelSftp.LsEntry)(v.get(i))).getFilename());
 //            }
 
             //以下代码实现从本地上传一个文件到服务器，如果要实现下载，对换以下流就可以了
