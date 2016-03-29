@@ -314,7 +314,7 @@ public class Editor extends AppCompatActivity {
                         mLv.setAdapter(adapter);
                         mLv.setBackgroundColor(Color.WHITE);
                         mLv.setX(x);
-                        mLv.setY((float) (y + toolbarheight + statusbarheight+ (baseline / line)*1.75));//A little tricky here!
+                        mLv.setY((y + toolbarheight + statusbarheight+ (baseline / line)*2));//A little tricky here!
                         mLv.setVisibility(View.VISIBLE);
                     }catch (Exception e)
                     {
