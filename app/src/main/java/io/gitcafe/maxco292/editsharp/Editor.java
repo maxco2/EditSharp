@@ -6,8 +6,10 @@ import io.gitcafe.maxco292.editsharp.Python3.Python3Lexer;
 import io.gitcafe.maxco292.editsharp.adapter.MyAdapter;
 import io.gitcafe.maxco292.editsharp.csharp.CSharp4Lexer;
 import io.gitcafe.maxco292.editsharp.db.DatabaseAdapter;
+import me.drakeet.materialdialog.MaterialDialog;
 
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -15,6 +17,8 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 
+import android.os.Handler;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -27,6 +31,7 @@ import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
@@ -73,6 +78,25 @@ public class Editor extends AppCompatActivity {
     private int toolbarheight;
     private int statusbarheight;
     private String FileName;
+    private static final int UPLOAD_SUC=1;
+    private static final int UPLOAD_FAIL=0;
+
+    @SuppressLint("HandlerLeak")
+    private Handler mHandler=new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what)
+            {
+                case UPLOAD_SUC:
+                    Toast.makeText(Editor.this,"已保存并上传文件到远程服务器，请在服务器端查看",Toast.LENGTH_SHORT).show();
+                    break;
+                case UPLOAD_FAIL:
+                    Toast.makeText(Editor.this,"上传文件到远程服务器失败，请重试",Toast.LENGTH_SHORT).show();
+                    break;
+            }
+            super.handleMessage(msg);
+        }
+    };
     private void setmPreValue(String[] str)
     {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -125,42 +149,6 @@ public class Editor extends AppCompatActivity {
         setTitle(FileName);
         mLv= (ListView) findViewById(R.id.list_all);
         mtt=(EditText)findViewById(R.id.note1);
-        mtt.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
-            @Override
-            public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        File fi = new File(FilePath);
-                        FileOutputStream testfileio;
-                        try {
-                            testfileio = new FileOutputStream(fi);
-                            byte b[]=mtt.getText().toString().getBytes();
-                            testfileio.write(b, 0, b.length);
-                            testfileio.close();
-                            //Toast.makeText(Editor.this,"保存成功",Toast.LENGTH_SHORT).show();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        try {
-                            SSFTPsync.sshSftp(
-                                    mPreValue[0],
-                                    mPreValue[2],
-                                    mPreValue[3],
-                                    -1,
-                                    mPreValue[1],
-                                    FilePath,
-                                    FileName
-                            );
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-
-                    }
-                }).start();
-                Toast.makeText(Editor.this,"已保存并上传文件到远程服务器，请在服务器端查看",Toast.LENGTH_SHORT).show();
-            }
-        });
         TextWatcher tw=new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -446,6 +434,62 @@ public class Editor extends AppCompatActivity {
         }
         s.replace(START, END, lll);
     }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        if(Objects.equals("上传文件到服务器", item.toString()))
+        {
+            final MaterialDialog materialDialog=new MaterialDialog(Editor.this);
+            materialDialog.setTitle("上传服务器并保存文件？")
+                    .setPositiveButton("是", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    File fi = new File(FilePath);
+                                    FileOutputStream testfileio;
+                                    try {
+                                        testfileio = new FileOutputStream(fi);
+                                        byte b[] = mtt.getText().toString().getBytes();
+                                        testfileio.write(b, 0, b.length);
+                                        testfileio.close();
+                                        //Toast.makeText(Editor.this,"保存成功",Toast.LENGTH_SHORT).show();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                    try {
+                                        SSFTPsync.sshSftp(
+                                                mPreValue[0],
+                                                mPreValue[2],
+                                                mPreValue[3],
+                                                -1,
+                                                mPreValue[1],
+                                                FilePath,
+                                                FileName
+                                        );
+                                        mHandler.obtainMessage(UPLOAD_SUC).sendToTarget();
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                        mHandler.obtainMessage(UPLOAD_FAIL).sendToTarget();
+                                    }
+
+                                }
+                            }).start();
+                            materialDialog.dismiss();
+                        }
+                    }).setNegativeButton("否", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    materialDialog.dismiss();
+                }
+            });
+            materialDialog.show();
+
+        }
+        return super.onContextItemSelected(item);
+    }
+
     private Lexer selectlexer(String typeoffile,String input_str)
     {
         Lexer cs;
