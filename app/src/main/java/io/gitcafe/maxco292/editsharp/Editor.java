@@ -334,7 +334,6 @@ public class Editor extends AppCompatActivity {
             }
         };
         typeoffile=mintent.getStringExtra("type");
-
         try {
             fileOpen(typeoffile);
         } catch (IOException e) {
