@@ -1,15 +1,20 @@
 package io.gitcafe.maxco292.editsharp;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -101,6 +106,7 @@ public class MainActivity extends AppCompatActivity
     private static final int MSG_FAILURE=0;
     private static final int MSG_OPENFILE=2;
     private static final int MSG_DOWN_FILE_FAIL=3;
+    private static final int REQUEST_CODE_ASK_STORAGE=1;
     private FloatingActionButton fab;
     private FloatingActionButton fab_git;
     private MaterialDialog materialDialog;
@@ -272,9 +278,35 @@ public class MainActivity extends AppCompatActivity
             super.handleMessage(msg);
         }
     };
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode){
+            case REQUEST_CODE_ASK_STORAGE:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                } else {
+                    Toast.makeText(MainActivity.this, "禁止存储空间权限", Toast.LENGTH_SHORT)
+                            .show();
+                    //android.os.Process.killProcess(android.os.Process.myPid());
+                    finish();
+
+                }
+                break;
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
+        if (Build.VERSION.SDK_INT >= 23) {
+            int checkCallPhonePermission = ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            if(checkCallPhonePermission != PackageManager.PERMISSION_GRANTED){
+                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_ASK_STORAGE);
+            }
+        }
         Uri uri=getIntent().getData();
         setmPreValue(mPreValue);
 
